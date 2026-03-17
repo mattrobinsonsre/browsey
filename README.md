@@ -32,4 +32,4 @@ macOS delivers URLs to the default browser via Apple Events, not CLI args. Only 
 
 ## License
 
-MIT
+GPL-3.0 — see [LICENSE](LICENSE).
