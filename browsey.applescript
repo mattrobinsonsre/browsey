@@ -33,8 +33,11 @@ for k, v in sorted(d['profile']['info_cache'].items(), key=lambda x: x[0]):
 		end if
 	end repeat
 
-	-- Open URL in Chrome with the selected profile
-	-- Using the Chrome binary directly ensures a new tab in an existing window
-	-- rather than spawning a new window (which open -na would do)
-	do shell script "'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --profile-directory=" & quoted form of chosenDir & " " & quoted form of theURL & " &>/dev/null &"
+	-- Open URL in Chrome with the selected profile.
+	-- Launch through LaunchServices (open -na), not as our own child process:
+	-- since macOS 27, subprocesses an app leaves behind are killed when it quits,
+	-- which took out the backgrounded Chrome binary before it could hand the URL
+	-- to the running Chrome. The new instance forwards to the running Chrome and
+	-- opens a tab in that profile's existing window (or launches Chrome if needed).
+	do shell script "open -na 'Google Chrome' --args --profile-directory=" & quoted form of chosenDir & " " & quoted form of theURL
 end open location
