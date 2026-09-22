@@ -45,8 +45,17 @@ PLIST="${APP_BUNDLE}/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Add :CFBundleDocumentTypes:0:LSItemContentTypes:2 string public.url" "${PLIST}"
 /usr/libexec/PlistBuddy -c "Add :CFBundleDocumentTypes:0:LSHandlerRank string Alternate" "${PLIST}"
 
+# Bundle the profile-discovery helper (loaded via `path to resource`)
+cp "${SCRIPT_DIR}/profiles.py" "${APP_BUNDLE}/Contents/Resources/profiles.py"
+
 # Use Chrome's icon
 cp /Applications/Google\ Chrome.app/Contents/Resources/app.icns "${APP_BUNDLE}/Contents/Resources/applet.icns"
+
+# Re-sign (ad-hoc): osacompile signed the bundle before the edits above, which
+# leaves the signature invalid. TCC then can't compute a designated requirement
+# and refuses Apple Events outright (no prompt), so Safari scripting fails.
+codesign --force --sign - "${APP_BUNDLE}"
+codesign --verify --strict "${APP_BUNDLE}"
 
 echo "Built ${APP_BUNDLE}"
 echo "Info.plist patched with URL scheme handlers."
