@@ -52,11 +52,30 @@ on open location theURL
 	end if
 end open location
 
--- Safari has no CLI flag or scripting support for profiles, so drive its
+-- Safari has no CLI flag or scripting support for profiles. Reuse an existing
+-- window of the chosen profile if there is one; otherwise drive its
 -- File > New Window > "New <Profile> Window" menu item (needs Accessibility),
 -- then load the URL into the window that opens.
 on openInSafariProfile(profileName, theURL)
 	tell application "Safari" to activate
+
+	-- Safari titles every window "<Profile> — <page title>" once more than one
+	-- profile exists, and that title is the only link between a window and its
+	-- profile (SafariTabs.db's windows.active_profile_id can't be mapped back to
+	-- an AppleScript window object). Windows are enumerated front to back, so this
+	-- lands the tab in the profile's frontmost window.
+	tell application "Safari"
+		repeat with w in windows
+			try
+				set wName to name of w
+				if wName is profileName or wName starts with (profileName & " — ") then
+					set current tab of w to (make new tab at end of tabs of w with properties {URL:theURL})
+					set index of w to 1
+					return
+				end if
+			end try
+		end repeat
+	end tell
 
 	tell application "System Events" to tell process "Safari"
 		-- Wait for the menu bar if Safari is still launching
